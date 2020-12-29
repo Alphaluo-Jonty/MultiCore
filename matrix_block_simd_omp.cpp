@@ -280,7 +280,7 @@ int main()
 	
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 5; ++j) {
-			run_solution_simd_thread(matrixN[i], blockM[j], 4);	
+			run_solution_simd_thread(matrixN[i], blockM[j], 24);	
 		}
 	}
 	int index = 0;

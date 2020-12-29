@@ -172,7 +172,8 @@ void matrix_mul_bk_avx_multhread(int n, int block_size, float* A, float* B, floa
 						for (int m = 0; m < block_size; m += FLOAT_SIZE) {
 							va1 = _mm256_load_ps(&a1[i * block_size + m]);
 							vb1 = _mm256_load_ps(&b1_t[j * block_size + m]);
-							sum_vc = _mm256_fmadd_ps(va1, vb1, sum_vc);
+							//sum_vc = _mm256_fmadd_ps(va1, vb1, sum_vc);
+							sum_vc = _mm256_add_ps(_mm256_mul_ps(va1, vb1), sum_vc);
 						}			
 						// 累加求和
 						sum_vc = _mm256_add_ps(sum_vc, _mm256_permute2f128_ps(sum_vc, sum_vc, 1));

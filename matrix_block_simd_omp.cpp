@@ -307,11 +307,6 @@ int main()
 	}
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 5; ++j) {
-			run_solution_eigen(matrixN[i]);
-		}
-	}
-	for (int i = 0; i < 4; ++i) {
-		for (int j = 0; j < 5; ++j) {
 			run_solution_simd_thread(matrixN[i], blockM[j], 4);	
 		}
 	}
@@ -324,9 +319,7 @@ int main()
 				<< vecSIMDTime[index] << " ms" << " multiple thread: "
 				<< vecThreadTime4[index] << " ms" << " 加速比： " << setprecision(5) 
 				<< vecSIMDTime[index] / vecThreadTime4[index] << endl;
-			cout << "eigen lib :" << vecEigenTime[index] << " ms" << " 加速比: " 
-				<<setprecision(5) << vecSIMDTime[index] / vecEigenTime[index] << endl;
-
+			
 			index++;
 		}
 	}

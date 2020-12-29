@@ -272,11 +272,11 @@ void run_solution_simd_thread(int n, int m, int threadnum)
 
 int main()
 {
-	for (int i = 0; i < 4; ++i) {
-		for (int j = 0; j < 5; ++j) {
-			run_solution_simd(matrixN[i], blockM[j]);
-		}
-	}
+	// for (int i = 0; i < 4; ++i) {
+	// 	for (int j = 0; j < 5; ++j) {
+	// 		run_solution_simd(matrixN[i], blockM[j]);
+	// 	}
+	// }
 	
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 5; ++j) {
@@ -288,10 +288,8 @@ int main()
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 5; ++j) {
 			// 输出计时结果，以毫秒为单位
-			cout << "N = " << matrixN[i] << ", M = " << blockM[j] << ", base: " 
-				<< vecSIMDTime[index] << " ms" << " multiple thread: "
-				<< vecThreadTime4[index] << " ms" << " 加速比： " << setprecision(5) 
-				<< vecSIMDTime[index] / vecThreadTime4[index] << endl;
+			cout << "N = " << matrixN[i] << ", M = " << blockM[j] << " multiple thread: "
+				<< vecThreadTime4[index] << " ms"  << endl;
 			index++;
 		}
 	}

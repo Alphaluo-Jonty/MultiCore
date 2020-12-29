@@ -3,11 +3,11 @@
 #include <vector>
 #include <iomanip>
 #include <immintrin.h>
-#include <Eigen/Dense>
 #include <omp.h>
+//#include <Eigen/Dense>
 
 using namespace std;
-using namespace Eigen;
+//using namespace Eigen;
 
 
 static int matrixN[4] = { 512, 1024, 2048, 4096 };
@@ -246,33 +246,29 @@ void run_solution_base(int n, int m)
 	delete[] C;
 }
 
-void run_solution_eigen(int n)
-{
-	// 在堆中存放矩阵,用MatrixXf类型
-	MatrixXf A(n, n);
-	MatrixXf B(n, n);
-	MatrixXf C(n, n);
-
-	// 随机生成矩阵A和B
-	for (int i = 0; i < n; ++i) {
-		for (int j = 0; j < n; ++j) {
-			A(i, j) = rand_float(0.8);
-			B(i, j) = rand_float(0.8);
-			C(i, j) = 0;
-		}
-	}
-
-	gettimeofday(&startTime, NULL);
-	// 矩阵相乘
-	C = A * B;
-
-	gettimeofday(&endTime, NULL);
-	diff = 1000000 * (endTime.tv_sec - startTime.tv_sec) + (endTime.tv_usec - startTime.tv_usec);
-	// 输出计时结果，以微秒为单位
-	cout << "N = " << n << ", time cost: " << setprecision(5) << diff / 1000 << " ms" << endl;
-
-	vecEigenTime.push_back(diff);
-}
+// void run_solution_eigen(int n)
+// {
+// 	// 在堆中存放矩阵,用MatrixXf类型
+// 	MatrixXf A(n, n);
+// 	MatrixXf B(n, n);
+// 	MatrixXf C(n, n);
+// 	// 随机生成矩阵A和B
+// 	for (int i = 0; i < n; ++i) {
+// 		for (int j = 0; j < n; ++j) {
+// 			A(i, j) = rand_float(0.8);
+// 			B(i, j) = rand_float(0.8);
+// 			C(i, j) = 0;
+// 		}
+// 	}
+// 	gettimeofday(&startTime, NULL);
+// 	// 矩阵相乘
+// 	C = A * B;
+// 	gettimeofday(&endTime, NULL);
+// 	diff = 1000000 * (endTime.tv_sec - startTime.tv_sec) + (endTime.tv_usec - startTime.tv_usec);
+// 	// 输出计时结果，以微秒为单位
+// 	cout << "N = " << n << ", time cost: " << setprecision(5) << diff / 1000 << " ms" << endl;
+// 	vecEigenTime.push_back(diff);
+// }
 
 void run_solution_simd_thread(int n, int m, int threadnum)
 {

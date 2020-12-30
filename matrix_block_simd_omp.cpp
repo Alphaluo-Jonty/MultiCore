@@ -24,7 +24,7 @@ static unsigned long diff;
 #define FLOAT_SIZE 8 // 一个AVX向量中包含8个单精度浮点数
 #define BYTE_SIZE 16 
 
-const int THREAD_NUMS = 4;
+const int THREAD_NUMS = 24;
 static float RESULT = 0;
 
 float rand_float(float s) {
@@ -205,6 +205,7 @@ void matrix_mul_bk_avx_multhread(int block_size, float* A, float* B, float* C)
 				}
 				// 释放_mm_malloc分配的内存
 				_mm_free(b1_t);
+		
 			}
 		}
 	}

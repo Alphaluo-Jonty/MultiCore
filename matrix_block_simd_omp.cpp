@@ -294,9 +294,9 @@ void run_solution_simd_thread(int m, float rseed)
 	_mm_free(C);
 }
 
-int main()
+int main(int argc, char* argv[])
 {	
-	float rseed = 0.314;
+	float rseed = atof(argv[1]);
 	// for (int j = 0; j < 5; ++j) {
 	// 	run_solution_simd_thread(blockM[j], rseed);	
 	// }

@@ -24,7 +24,7 @@ static unsigned long diff;
 #define FLOAT_SIZE 8 // 一个AVX向量中包含8个单精度浮点数
 #define BYTE_SIZE 16 // 一个AVX向量中包含32个字节
 
-#define THREAD_NUMS 24
+static int THREAD_NUMS = 24;
 
 float rand_float(float s) {
     return 4 * s * (1 - s);

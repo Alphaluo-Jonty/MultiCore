@@ -33,15 +33,13 @@ float rand_float(float s) {
 
 void matrix_gen(float* a, float* b, float* c, float seed) {
     float s = seed;
-	omp_set_num_threads(THREAD_NUMS);
-	#pragma omp parallel for
+	//omp_set_num_threads(THREAD_NUMS);
+	//#pragma omp parallel for
     for (int i = 0; i < N * N; ++i) {
         s = rand_float(s);
         a[i] = s;
         s = rand_float(s);
         b[i] = s;
-		s = rand_float(s);
-        c[i] = s;
     }
 }
 
@@ -173,38 +171,50 @@ void matrix_mul_bk_avx_multhread(int block_size, float* A, float* B, float* C)
 	for (int sj = 0; sj < N; sj += block_size) {
 		for (int si = 0; si < N; si += block_size) {
 			for (int sk = 0; sk < N; sk += block_size) {
-				int i, j;
-				float* a1 = A + si * N + sk;  // 当前的分块矩阵a1
-				float* b1 = B + sk * N + sj;
-				float* c1 = C + si * N + sj;
-				// 为使用SIMD指令，对b1进行转置
-				float* b1_t = (float*)_mm_malloc(sizeof(float) * block_size * block_size, 64);
-				for (int ti = 0; ti < block_size; ++ti) {
-					for (int tj = 0; tj < block_size; ++tj) {
-						b1_t[tj * block_size + ti] = b1[ti * block_size + tj];
+				for (int i = sj; i < sj+block_size && i < N; ++i) {
+					for (int k = sk; k < sk + block_size && k < N; ++k){
+						__m256 a_val = _mm256_broadcast_ss(A + k + i * N);
+						for (int j = si; j < si + block_size && j < N; j += 8) {
+							__m256 b_val = _mm256_load_ps(B + j + k * N);
+							__m256 c_val = _mm256_load_ps(C + j + i * N);
+							c_val = _mm256_add_ps(c_val, _mm256_mul_ps(b_val, a_val));
+							_mm256_store_ps(C + j + i * N, c_val);
+						}
 					}
 				}
-				for (i = 0; i < block_size; ++i) {
-					for (j = 0; j < block_size; ++j) {
-						//加载数组当前元素的寄存器，每次读取8个单精度浮点数
-						__m256 va1 = _mm256_setzero_ps();
-						__m256 vb1 = _mm256_setzero_ps();
-						__m256 vc1 = _mm256_setzero_ps();
-						__m256 sum_vc = _mm256_setzero_ps();
-						for (int m = 0; m < block_size; m += FLOAT_SIZE) {
-							va1 = _mm256_load_ps(&a1[i * block_size + m]);
-							vb1 = _mm256_load_ps(&b1_t[j * block_size + m]);
-							//sum_vc = _mm256_fmadd_ps(va1, vb1, sum_vc);
-							sum_vc = _mm256_add_ps(_mm256_mul_ps(va1, vb1), sum_vc);
-						}			
-						// 累加求和
-						sum_vc = _mm256_add_ps(sum_vc, _mm256_permute2f128_ps(sum_vc, sum_vc, 1));
-						sum_vc = _mm256_hadd_ps(sum_vc, sum_vc);
-						c1[i * N + j] = _mm256_cvtss_f32(_mm256_hadd_ps(sum_vc, sum_vc));
-					}
-				}
-				// 释放_mm_malloc分配的内存
-				_mm_free(b1_t);
+
+				// int i, j;
+				// float* a1 = A + si * N + sk;  // 当前的分块矩阵a1
+				// float* b1 = B + sk * N + sj;
+				// float* c1 = C + si * N + sj;			
+				// // 为使用SIMD指令，对b1进行转置
+				// float* b1_t = (float*)_mm_malloc(sizeof(float) * block_size * block_size, 64);
+				// for (int ti = 0; ti < block_size; ++ti) {
+				// 	for (int tj = 0; tj < block_size; ++tj) {
+				// 		b1_t[tj * block_size + ti] = b1[ti * block_size + tj];
+				// 	}
+				// }
+				// for (i = 0; i < block_size; ++i) {
+				// 	for (j = 0; j < block_size; ++j) {
+				// 		//加载数组当前元素的寄存器，每次读取8个单精度浮点数
+				// 		__m256 va1 = _mm256_setzero_ps();
+				// 		__m256 vb1 = _mm256_setzero_ps();
+				// 		__m256 vc1 = _mm256_setzero_ps();
+				// 		__m256 sum_vc = _mm256_setzero_ps();
+				// 		for (int m = 0; m < block_size; m += FLOAT_SIZE) {
+				// 			va1 = _mm256_load_ps(&a1[i * block_size + m]);
+				// 			vb1 = _mm256_load_ps(&b1_t[j * block_size + m]);
+				// 			//sum_vc = _mm256_fmadd_ps(va1, vb1, sum_vc);
+				// 			sum_vc = _mm256_add_ps(_mm256_mul_ps(va1, vb1), sum_vc);
+				// 		}			
+				// 		// 累加求和
+				// 		sum_vc = _mm256_add_ps(sum_vc, _mm256_permute2f128_ps(sum_vc, sum_vc, 1));
+				// 		sum_vc = _mm256_hadd_ps(sum_vc, sum_vc);
+				// 		c1[i * N + j] = _mm256_cvtss_f32(_mm256_hadd_ps(sum_vc, sum_vc));
+				// 	}
+				// }
+				// // 释放_mm_malloc分配的内存
+				// _mm_free(b1_t);
 		
 			}
 		}
@@ -215,6 +225,38 @@ void matrix_mul_bk_avx_multhread(int block_size, float* A, float* B, float* C)
 	#pragma omp parallel for
 	for (int i = 0; i < N; ++i) {
 		vecMax[i] = findMax(C+i*N);
+	}
+	
+	RESULT = findMin(vecMax);
+}
+
+inline void simd_omp_block(float *c, float *a, float *b, int m0)
+{
+    #pragma omp parallel for
+    for(int i = 0; i < N; i += m0) {
+        for(int j = 0; j < N; j += m0) {
+            for(int k = 0; k < N; k += m0) {
+                for(int i1 = i; i1 < i + m0 && i1 < N; i1++) {
+                    for(int k1 = k; k1 < k + m0 && k1 < N; k1++) {
+                        __m256 a_elem = _mm256_broadcast_ss(a + k1 + i1 * N);
+
+                        for(int j1 = j; j1 < j + m0 && j1 < N; j1+=8) {
+							 __m256 b_row = _mm256_load_ps(b + j1 + k1 * N); 
+    						 __m256 c_row = _mm256_load_ps(c + j1 + i1 * N);
+
+                            c_row = _mm256_add_ps(c_row, _mm256_mul_ps(b_row, a_elem));
+							_mm256_store_ps(c + j1 + i1  * N, c_row);
+                        }
+                    }
+                }
+            }
+        }
+    }
+	// 找出每一行中最大值的最小值
+	vector<float> vecMax(N);
+	#pragma omp parallel for
+	for (int i = 0; i < N; ++i) {
+		vecMax[i] = findMax(c+i*N);
 	}
 	
 	RESULT = findMin(vecMax);
@@ -283,6 +325,7 @@ void run_solution_simd_thread(int m, float rseed)
 	gettimeofday(&startTime, NULL);
 
 	// 矩阵相乘
+	//simd_omp_block(C,A,B,M);
 	matrix_mul_bk_avx_multhread(m, A, B, C);
 
 	gettimeofday(&endTime, NULL);

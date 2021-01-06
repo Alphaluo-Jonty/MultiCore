@@ -340,7 +340,7 @@ int main(int argc, char* argv[])
 	cout << " 随机数种子：" << rseed << endl;
 	// 输出计时结果，以毫秒为单位
 	cout << "N = 4096" << ", M = " << M << " time cost: "
-		<< vecThreadTime[0] << " ms"  << endl;
+		<< vecThreadTime[1] << " ms"  << endl;
 	cout <<" 最大值的最小值是： "<< RESULT << endl;
 
 	M = 32;
@@ -349,7 +349,7 @@ int main(int argc, char* argv[])
 	cout << " 随机数种子：" << rseed << endl;
 	// 输出计时结果，以毫秒为单位
 	cout << "N = 4096" << ", M = " << M << " time cost: "
-		<< vecThreadTime[0] << " ms"  << endl;
+		<< vecThreadTime[2] << " ms"  << endl;
 	cout <<" 最大值的最小值是： "<< RESULT << endl;
 
 	M = 16;
@@ -358,7 +358,7 @@ int main(int argc, char* argv[])
 	cout << " 随机数种子：" << rseed << endl;
 	// 输出计时结果，以毫秒为单位
 	cout << "N = 4096" << ", M = " << M << " time cost: "
-		<< vecThreadTime[0] << " ms"  << endl;
+		<< vecThreadTime[3] << " ms"  << endl;
 	cout <<" 最大值的最小值是： "<< RESULT << endl;
 
 	M = 8;
@@ -367,7 +367,7 @@ int main(int argc, char* argv[])
 	cout << " 随机数种子：" << rseed << endl;
 	// 输出计时结果，以毫秒为单位
 	cout << "N = 4096" << ", M = " << M << " time cost: "
-		<< vecThreadTime[0] << " ms"  << endl;
+		<< vecThreadTime[4] << " ms"  << endl;
 	cout <<" 最大值的最小值是： "<< RESULT << endl;
     return 0;
 }

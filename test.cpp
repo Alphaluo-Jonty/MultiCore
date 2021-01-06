@@ -328,45 +328,41 @@ int main(int argc, char* argv[])
 
 	run_block_simd_omp(M, rseed);	
 
-	cout << " 随机数种子：" << rseed << endl;
+	cout << "N =" << N << " 随机数种子：" << rseed << endl;
 	// 输出计时结果，以毫秒为单位
-	cout << "N = 4096" << ", M = " << M << " time cost: "
+	cout << "M = " << M << " time cost: "
 		<< vecThreadTime[0] << " ms"  << endl;
 	cout <<" 最大值的最小值是： "<< RESULT << endl;
 
 	M = 64;
 	run_block_simd_omp(M, rseed);	
 
-	cout << " 随机数种子：" << rseed << endl;
 	// 输出计时结果，以毫秒为单位
-	cout << "N = 4096" << ", M = " << M << " time cost: "
+	cout << "M = " << M << " time cost: "
 		<< vecThreadTime[1] << " ms"  << endl;
 	cout <<" 最大值的最小值是： "<< RESULT << endl;
 
 	M = 32;
 	run_block_simd_omp(M, rseed);	
 
-	cout << " 随机数种子：" << rseed << endl;
 	// 输出计时结果，以毫秒为单位
-	cout << "N = 4096" << ", M = " << M << " time cost: "
+	cout << "M = " << M << " time cost: "
 		<< vecThreadTime[2] << " ms"  << endl;
 	cout <<" 最大值的最小值是： "<< RESULT << endl;
 
 	M = 16;
 	run_block_simd_omp(M, rseed);	
 
-	cout << " 随机数种子：" << rseed << endl;
 	// 输出计时结果，以毫秒为单位
-	cout << "N = 4096" << ", M = " << M << " time cost: "
+	cout << "M = " << M << " time cost: "
 		<< vecThreadTime[3] << " ms"  << endl;
 	cout <<" 最大值的最小值是： "<< RESULT << endl;
 
 	M = 8;
 	run_block_simd_omp(M, rseed);	
 
-	cout << " 随机数种子：" << rseed << endl;
 	// 输出计时结果，以毫秒为单位
-	cout << "N = 4096" << ", M = " << M << " time cost: "
+	cout << "M = " << M << " time cost: "
 		<< vecThreadTime[4] << " ms"  << endl;
 	cout <<" 最大值的最小值是： "<< RESULT << endl;
     return 0;

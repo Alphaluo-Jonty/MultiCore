@@ -9,12 +9,12 @@ using namespace std;
 
 
 const int N = 4096;
-const int M = 128;
+static int M = 128;
 const int blockM[5] = { 8, 16, 32, 64, 128 };
 static vector<double> vecBaseTime;
 static vector<double> vecSIMDTime;
 static vector<double> vecEigenTime;
-static vector<double> vecThreadTime4;
+static vector<double> vecThreadTime;
 
 static struct timeval startTime;
 static struct timeval endTime;
@@ -33,8 +33,6 @@ float rand_float(float s) {
 
 void matrix_gen(float* a, float* b, float* c, float seed) {
     float s = seed;
-	//omp_set_num_threads(THREAD_NUMS);
-	//#pragma omp parallel for
     for (int i = 0; i < N * N; ++i) {
         s = rand_float(s);
         a[i] = s;
@@ -81,7 +79,7 @@ inline void base_block_multiply(int n, int block_size, float* A, float* B, float
 
 
 // 矩阵相乘（分块）--串行
-inline void matrix_mul_bk(int n, int block_size, float* A, float* B, float* C) {
+inline void mul_bk_baseline(int n, int block_size, float* A, float* B, float* C) {
 	for (int sj = 0; sj < n; sj += block_size) {
 		for (int si = 0; si < n; si += block_size) {
 			for (int sk = 0; sk < n; sk += block_size) {
@@ -164,25 +162,12 @@ float findMin(vector<float> vecVal) {
 	return minVal;
 }
 
-void matrix_mul_bk_avx_multhread(int block_size, float* A, float* B, float* C)
+void mul_transpose_block_simd_omp(int block_size, float* A, float* B, float* C)
 {
-	omp_set_num_threads(THREAD_NUMS);
 	#pragma omp parallel for
 	for (int sj = 0; sj < N; sj += block_size) {
 		for (int si = 0; si < N; si += block_size) {
 			for (int sk = 0; sk < N; sk += block_size) {
-				// for (int i = sj; i < sj+block_size && i < N; ++i) {
-				// 	for (int k = sk; k < sk + block_size && k < N; ++k){
-				// 		__m256 a_val = _mm256_broadcast_ss(A + k + i * N);
-				// 		for (int j = si; j < si + block_size && j < N; j += 8) {
-				// 			__m256 b_val = _mm256_load_ps(B + j + k * N);
-				// 			__m256 c_val = _mm256_load_ps(C + j + i * N);
-				// 			c_val = _mm256_add_ps(c_val, _mm256_mul_ps(b_val, a_val));
-				// 			_mm256_store_ps(C + j + i * N, c_val);
-				// 		}
-				// 	}
-				// }
-
 				int i, j;
 				float* a1 = A + si * N + sk;  // 当前的分块矩阵a1
 				float* b1 = B + sk * N + sj;
@@ -221,7 +206,7 @@ void matrix_mul_bk_avx_multhread(int block_size, float* A, float* B, float* C)
 	}
 	// 找出每一行中最大值的最小值
 	vector<float> vecMax(N);
-	omp_set_num_threads(4);
+
 	#pragma omp parallel for
 	for (int i = 0; i < N; ++i) {
 		vecMax[i] = findMax(C+i*N);
@@ -262,7 +247,7 @@ inline void simd_omp_block(float *c, float *a, float *b, int m0)
 	RESULT = findMin(vecMax);
 }
 
-void run_solution_simd(int n, int m, float rseed)
+void run_block_simd(int n, int m, float rseed)
 {
 	// 在堆中存放矩阵
 	float* A = (float*)_mm_malloc(sizeof(float) * n * n, 64); // 按64字节对齐
@@ -286,7 +271,7 @@ void run_solution_simd(int n, int m, float rseed)
 	_mm_free(C);
 }
 
-void run_solution_base(int n, int m, float rseed)
+void run_baseline(int n, int m, float rseed)
 {
 	// 在堆中存放矩阵
 	float* A = new float[ n * n ];
@@ -298,7 +283,7 @@ void run_solution_base(int n, int m, float rseed)
 
 	gettimeofday(&startTime, NULL);
 	// 矩阵相乘
-	matrix_mul_bk(n, m, A, B, C);
+	mul_bk_baseline(n, m, A, B, C);
 
 	gettimeofday(&endTime, NULL);
 	diff = 1000000 * (endTime.tv_sec - startTime.tv_sec) + (endTime.tv_usec - startTime.tv_usec);
@@ -312,7 +297,7 @@ void run_solution_base(int n, int m, float rseed)
 	delete[] C;
 }
 
-void run_solution_simd_thread(int m, float rseed)
+void run_block_simd_omp(int m, float rseed)
 {
 	// 在堆中存放矩阵
 	float* A = (float*)_mm_malloc(sizeof(float) * N * N, 64); // 按64字节对齐
@@ -325,12 +310,12 @@ void run_solution_simd_thread(int m, float rseed)
 	gettimeofday(&startTime, NULL);
 
 	// 矩阵相乘
-	//simd_omp_block(C,A,B,M);
-	matrix_mul_bk_avx_multhread(m, A, B, C);
+	simd_omp_block(C,A,B,M);
+	//mul_transpose_block_simd_omp(m, A, B, C);
 
 	gettimeofday(&endTime, NULL);
 	diff = 1000 * (endTime.tv_sec - startTime.tv_sec) + (endTime.tv_usec - startTime.tv_usec) / 1000;
-	vecThreadTime4.push_back(diff);
+	vecThreadTime.push_back(diff);
 	// 释放
 	_mm_free(A);
 	_mm_free(B);
@@ -340,16 +325,49 @@ void run_solution_simd_thread(int m, float rseed)
 int main(int argc, char* argv[])
 {	
 	float rseed = atof(argv[1]);
-	// for (int j = 0; j < 5; ++j) {
-	// 	run_solution_simd_thread(blockM[j], rseed);	
-	// }
-	run_solution_simd_thread(M, rseed);	
 
-	int index = 0;
-	cout << "Thread num: " << THREAD_NUMS << " 随机数种子：" << rseed << endl;
+	run_block_simd_omp(M, rseed);	
+
+	cout << " 随机数种子：" << rseed << endl;
 	// 输出计时结果，以毫秒为单位
 	cout << "N = 4096" << ", M = " << M << " time cost: "
-		<< vecThreadTime4[0] << " ms"  << endl;
+		<< vecThreadTime[0] << " ms"  << endl;
+	cout <<" 最大值的最小值是： "<< RESULT << endl;
+
+	M = 64;
+	run_block_simd_omp(M, rseed);	
+
+	cout << " 随机数种子：" << rseed << endl;
+	// 输出计时结果，以毫秒为单位
+	cout << "N = 4096" << ", M = " << M << " time cost: "
+		<< vecThreadTime[0] << " ms"  << endl;
+	cout <<" 最大值的最小值是： "<< RESULT << endl;
+
+	M = 32;
+	run_block_simd_omp(M, rseed);	
+
+	cout << " 随机数种子：" << rseed << endl;
+	// 输出计时结果，以毫秒为单位
+	cout << "N = 4096" << ", M = " << M << " time cost: "
+		<< vecThreadTime[0] << " ms"  << endl;
+	cout <<" 最大值的最小值是： "<< RESULT << endl;
+
+	M = 16;
+	run_block_simd_omp(M, rseed);	
+
+	cout << " 随机数种子：" << rseed << endl;
+	// 输出计时结果，以毫秒为单位
+	cout << "N = 4096" << ", M = " << M << " time cost: "
+		<< vecThreadTime[0] << " ms"  << endl;
+	cout <<" 最大值的最小值是： "<< RESULT << endl;
+
+	M = 8;
+	run_block_simd_omp(M, rseed);	
+
+	cout << " 随机数种子：" << rseed << endl;
+	// 输出计时结果，以毫秒为单位
+	cout << "N = 4096" << ", M = " << M << " time cost: "
+		<< vecThreadTime[0] << " ms"  << endl;
 	cout <<" 最大值的最小值是： "<< RESULT << endl;
     return 0;
 }

@@ -8,7 +8,7 @@
 using namespace std;
 
 
-const int N = 1024;
+const int N = 4096;
 static int M = 128;
 const int blockM[5] = { 8, 16, 32, 64, 128 };
 static vector<double> vecBaseTime;

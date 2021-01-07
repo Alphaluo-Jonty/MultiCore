@@ -67,7 +67,7 @@ inline void base_block_multiply(int n, int block_size, float* A, float* B, float
 
 
 // 矩阵相乘（分块）--串行
-inline void mul_bk_baseline(int block_size, float* A, float* B, float* C) {
+inline void mul_block(int block_size, float* A, float* B, float* C) {
 	for (int sj = 0; sj < N; sj += block_size) {
 		for (int si = 0; si < N; si += block_size) {
 			for (int sk = 0; sk < N; sk += block_size) {
@@ -109,7 +109,7 @@ void run_baseline()
 	gettimeofday(&startTime, NULL);
 
 	// 矩阵相乘
-	mul_bk_baseline(M, C, A, B);
+	mul_block(M, C, A, B);
 
 	gettimeofday(&endTime, NULL);
 	diff = 1000 * (endTime.tv_sec - startTime.tv_sec) + (endTime.tv_usec - startTime.tv_usec) / 1000;

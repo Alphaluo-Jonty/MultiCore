@@ -325,9 +325,8 @@ void run_solution_simd_thread(int m, float rseed)
 	gettimeofday(&startTime, NULL);
 
 	// 矩阵相乘
-	//simd_omp_block(C,A,B,M);
-	matrix_mul_bk_avx_multhread(m, A, B, C);
-
+	simd_omp_block(C,A,B,M);
+	//matrix_mul_bk_avx_multhread(m, A, B, C);
 	gettimeofday(&endTime, NULL);
 	diff = 1000 * (endTime.tv_sec - startTime.tv_sec) + (endTime.tv_usec - startTime.tv_usec) / 1000;
 	vecThreadTime4.push_back(diff);
